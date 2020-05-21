@@ -1,0 +1,23 @@
+{
+  "name": "exel",
+  "version": "1.0.0",
+  "description": "Pure JavaScript project",
+  "main": "webpack.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LanaLong/exel.git"
+  },
+  "keywords": [
+    "js",
+    "javascript"
+  ],
+  "author": "LanaLong <qmexperience@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LanaLong/exel/issues"
+  },
+  "homepage": "https://github.com/LanaLong/exel#readme"
+}
