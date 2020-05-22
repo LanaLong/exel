@@ -1,8 +1,13 @@
-const path = require('path')
+const path = require('path');
+const webpack = require('webpack');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const HTMLWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const WebpackMd5Hash = require('webpack-md5-hash');
+const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const ImageminPlugin = require('imagemin-webpack-plugin').default;
+const FontminPlugin = require('fontmin-webpack');
 
 const isProd = process.env.NODE_ENV === 'production'
 const isDev = !isProd
@@ -47,7 +52,6 @@ module.exports = {
         hot: isDev
     },
     plugins: [
-        new CleanWebpackPlugin(),
         new HTMLWebpackPlugin({
             template: '../src/pages/index/index.html',
             minify: {
@@ -55,6 +59,7 @@ module.exports = {
                 collapseWhitespace: isProd
             }
         }),
+        new CleanWebpackPlugin(),
         new CopyPlugin({
             patterns: [
                 {
@@ -64,6 +69,28 @@ module.exports = {
         }),
         new MiniCssExtractPlugin({
             filename: filename('css')
+        }),
+        new WebpackMd5Hash(),
+        new webpack.DefinePlugin({
+            'NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+        }),
+        new OptimizeCssAssetsPlugin({
+            assetNameRegExp: /\.css$/g,
+            cssProcessor: require('cssnano'),
+            cssProcessorPluginOptions: {
+                preset: ['default'],
+            },
+            canPrint: true
+        }),
+        new FontminPlugin({
+            autodetect: true,
+            glyphs: ['\uf0c8'],
+        }),
+        new ImageminPlugin({
+            disable: process.env.NODE_ENV !== 'production',
+            pngquant: {
+                quality: '95-100'
+            }
         })
     ],
     module: {
@@ -71,21 +98,46 @@ module.exports = {
             {
                 test: /\.s[ac]ss$/i,
                 use: [
-                    {
+                    (isDev ? 'style-loader' :
+                        {
                         loader: MiniCssExtractPlugin.loader,
                         options: {
                             hmr: isDev,
-                            reloadAll: true
+                            reloadAll: true,
+                            publicPath: '../'
+                        }
+                    }),
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            importLoaders: 2
                         }
                     },
-                    'css-loader',
                     'sass-loader',
+                    'postcss-loader'
                 ],
             },
             {
                 test: /\.js$/,
                 exclude: /node_modules/,
                 use: jsLoaders(),
+            },
+            {
+                test: /\.(png|jpg|gif|ico|svg)$/,
+                use: [
+                    'file-loader?name=./images/[name].[ext]',
+                    {
+                        loader: 'image-webpack-loader',
+                        options: {
+                            bypassOnDebug: true,
+                            disable: true,
+                        }
+                    },
+                ]
+            },
+            {
+                test: /\.(eot|ttf|woff|woff2)$/,
+                loader: 'file-loader?name=./vendor/fonts/[name].[ext]'
             },
         ],
     },
